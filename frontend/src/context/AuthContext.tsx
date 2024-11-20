@@ -1,77 +1,97 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthContextType } from '../types';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { authApi } from '../services/api';
 
-// Create the context with default values
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  login: async () => {},
-  register: async () => {},
-  logout: () => {}
-});
+interface User {
+  id: string;
+  email: string;
+}
 
-// Custom hook to use the auth context
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  register: (email: string, password: string) => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-// Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for existing session on mount
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      console.log('AuthContext: Attempting login');
+      const response = await authApi.login(email, password);
+      console.log('AuthContext: Login response:', response);
+      
+      localStorage.setItem('token', response.token);
+      setUser(response.user);
+    } catch (error) {
+      console.error('AuthContext: Login error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   }, []);
 
-  // Login function
-  const login = async (email: string, password: string) => {
-    try {
-      const { token, user } = await authApi.login(email, password);
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  };
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setUser(null);
+  }, []);
 
-  // Register function
-  const register = async (email: string, password: string) => {
+  const register = useCallback(async (email: string, password: string) => {
     try {
-      const { token, user } = await authApi.register(email, password);
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
+      setLoading(true);
+      const response = await authApi.register(email, password);
+      localStorage.setItem('token', response.token);
+      setUser(response.user);
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  // Logout function
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      authApi.getProfile()
+        .then((response: { user: User }) => {
+          setUser(response.user);
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    register
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

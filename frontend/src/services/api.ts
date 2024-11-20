@@ -58,11 +58,18 @@ api.interceptors.request.use((config) => {
 // Auth API calls
 export const authApi = {
   login: async (email: string, password: string) => {
-    const { data } = await api.post<{ token: string; user: User }>('/api/auth/login', {
-      email,
-      password
-    });
-    return data;
+    try {
+      console.log('API: Making login request'); // Debug log
+      const response = await api.post('/api/auth/login', {
+        email,
+        password
+      });
+      console.log('API: Login response:', response.data); // Debug log
+      return response.data;
+    } catch (error) {
+      console.error('API: Login error:', error); // Debug log
+      throw error;
+    }
   },
 
   register: async (email: string, password: string) => {
@@ -76,6 +83,16 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('Registration failed:', error);
+      throw error;
+    }
+  },
+
+  getProfile: async () => {
+    try {
+      const response = await api.get<{ user: User }>('/api/auth/profile');
+      return response.data;
+    } catch (error) {
+      console.error('API: Get profile error:', error);
       throw error;
     }
   }
