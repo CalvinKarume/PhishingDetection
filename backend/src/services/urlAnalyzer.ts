@@ -81,8 +81,7 @@ export class UrlAnalyzer {
   private async checkDomainAge(hostname: string): Promise<number | null> {
     try {
       await dns.lookup(hostname);
-      // Note: Actual domain age check would require WHOIS lookup
-      // This is a placeholder returning null
+
       return null;
     } catch {
       return null;

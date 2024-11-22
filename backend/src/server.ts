@@ -5,7 +5,7 @@ import analysisRoutes from './routes/analysis';
 
 const app = express();
 
-// Middleware
+
 app.use(cors());
 app.use(express.json());
 
@@ -14,7 +14,7 @@ app.get('/test', (req, res) => {
   res.json({ message: 'Server is running' });
 });
 
-// Routes - add console log to debug
+
 console.log('Setting up auth routes...');
 app.use('/api/auth', authRoutes);
 console.log('Setting up analysis routes...');
