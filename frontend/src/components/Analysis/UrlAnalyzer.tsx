@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { analysisApi } from '../../services/api';
 
 const UrlAnalyzer: React.FC = () => {
   const [url, setUrl] = useState('');
@@ -16,17 +15,24 @@ const UrlAnalyzer: React.FC = () => {
     setResult(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please login first');
-        return;
+      const response = await fetch('http://localhost:5000/api/analysis/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ url })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to analyze URL');
       }
 
-      const result = await analysisApi.analyzeUrl(url, token);
-      setResult(result);
-    } catch (error) {
-      console.error('Analysis failed:', error);
-      setError('Failed to analyze URL. Please try again.');
+      const data = await response.json();
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to analyze URL');
     } finally {
       setLoading(false);
     }
