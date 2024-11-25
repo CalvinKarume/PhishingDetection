@@ -21,10 +21,18 @@ const UrlAnalysisForm: React.FC<Props> = ({ onAnalysisComplete }) => {
       return;
     }
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Please login to analyze URLs');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const result = await analysisApi.analyzeUrl(url);
+      console.log('Analyzing URL:', url); // Debug log
+      const result = await analysisApi.analyzeUrl(url, token);
+      console.log('Analysis result:', result); // Debug log
       onAnalysisComplete(result);
       setUrl(''); // Clear the input after successful analysis
     } catch (err) {
