@@ -1,38 +1,38 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { supabase } from '../config/supabase';
+import { DecodedToken } from '../types';
 
 const router = express.Router();
 
 router.post('/analyze', authenticateToken, async (req: Request, res: Response) => {
   try {
+    console.log('1. Analysis request received');
+    console.log('2. Request body:', req.body);
+    console.log('3. User from token:', req.user);
+
     const { url } = req.body;
-    const userId = req.user?.userId;
+    const user = req.user;
 
     if (!url) {
       return res.status(400).json({ message: 'URL is required' });
     }
 
-    if (!userId) {
+    if (!user?.id) {
+      console.log('4. User ID missing from token');
       return res.status(401).json({ message: 'User ID not found' });
     }
 
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch (error) {
-      return res.status(400).json({ message: 'Invalid URL format' });
-    }
-
-    // Perform analysis
+    console.log('5. Starting analysis for URL:', url);
     const analysis = await analyzeUrl(url);
+    console.log('6. Analysis completed:', analysis);
 
-    // Save analysis result
+    console.log('7. Saving to database with user ID:', user.id);
     const { data: savedAnalysis, error: saveError } = await supabase
       .from('url_analyses')
       .insert([
         {
-          user_id: userId,
+          user_id: user.id,
           url: url,
           threat_level: analysis.threatLevel,
           details: analysis.details
@@ -42,14 +42,21 @@ router.post('/analyze', authenticateToken, async (req: Request, res: Response) =
       .single();
 
     if (saveError) {
-      console.error('Error saving analysis:', saveError);
-      return res.status(500).json({ message: 'Error saving analysis results' });
+      console.error('8. Database error:', saveError);
+      return res.status(500).json({ 
+        message: 'Error saving analysis results',
+        error: saveError.message 
+      });
     }
 
+    console.log('9. Analysis saved successfully');
     res.json(savedAnalysis);
-  } catch (error) {
-    console.error('Analysis error:', error);
-    res.status(500).json({ message: 'Failed to analyze URL' });
+  } catch (error: any) {
+    console.error('10. Unexpected error:', error);
+    res.status(500).json({ 
+      message: 'Failed to analyze URL',
+      error: error.message 
+    });
   }
 });
 

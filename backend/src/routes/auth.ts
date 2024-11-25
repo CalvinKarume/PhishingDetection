@@ -68,7 +68,7 @@ router.post('/register', async (req: Request, res: Response) => {
     // Generate JWT
     const token = jwt.sign(
       { 
-        userId: newUser.id, 
+        id: newUser.id, 
         email: newUser.email 
       } as DecodedToken,
       process.env.JWT_SECRET || 'your_super_secret_jwt_key_2024',
@@ -129,7 +129,7 @@ router.post('/login', async (req: Request, res: Response) => {
     // Generate JWT
     const token = jwt.sign(
       { 
-        userId: user.id, 
+        id: user.id, 
         email: user.email 
       } as DecodedToken,
       process.env.JWT_SECRET || 'your_super_secret_jwt_key_2024',
@@ -155,7 +155,7 @@ router.post('/login', async (req: Request, res: Response) => {
 // Add the profile route
 router.get('/profile', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ message: 'User ID not found in token' });

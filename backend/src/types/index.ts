@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface DecodedToken {
-  userId: string;
+  id: string;
   email: string;
   iat?: number;
   exp?: number;
@@ -28,4 +28,13 @@ export interface AnalysisResult {
     hasSuspiciousTLD: boolean;
     threatScore: number;
   };
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData extends LoginData {
+  confirmPassword?: string;
 }
