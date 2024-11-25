@@ -1,7 +1,7 @@
 // Environment variables for the frontend
 const env = {
-    // API URL defaults to production if not provided
-    API_URL: process.env.REACT_APP_API_URL || 'https://phishingdetector-production.up.railway.app',
+    // API URL defaults to localhost if not provided
+    API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
     
     // Environment name
     NODE_ENV: process.env.NODE_ENV || 'development',
@@ -19,8 +19,5 @@ const env = {
       throw new Error(`Missing required environment variable: ${varName}`);
     }
   }
-  
-  // Log the API URL being used (for debugging)
-  console.log('Using API URL:', env.API_URL);
   
   export default env;
