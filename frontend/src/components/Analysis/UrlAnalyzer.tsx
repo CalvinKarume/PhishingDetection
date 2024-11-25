@@ -15,7 +15,7 @@ const UrlAnalyzer: React.FC = () => {
     setResult(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/analysis/analyze', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analysis/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
