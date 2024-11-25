@@ -100,9 +100,16 @@ export const authApi = {
 
 // URL Analysis API calls
 export const analysisApi = {
-  analyzeUrl: async (url: string) => {
-    const { data } = await api.post<AnalysisResult>('/api/analyze', { url });
-    return data;
+  analyzeUrl: async (url: string, token: string) => {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analysis/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ url }),
+    });
+    return response.json();
   },
 
   getHistory: async () => {
