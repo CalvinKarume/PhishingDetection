@@ -8,6 +8,42 @@ const UrlAnalyzer: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const { user } = useAuth();
 
+  const handleAnalyze = async (url: string) => {
+    try {
+      console.log('1. Starting analysis with URL:', url);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('2. Making request to:', `${process.env.REACT_APP_API_URL}/api/analysis/analyze`);
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analysis/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ url })
+      });
+
+      console.log('3. Response status:', response.status);
+
+      const data = await response.json();
+      console.log('4. Response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to analyze URL');
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('Analysis error:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -15,22 +51,8 @@ const UrlAnalyzer: React.FC = () => {
     setResult(null);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analysis/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ url })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to analyze URL');
-      }
-
-      const data = await response.json();
-      setResult(data);
+      const result = await handleAnalyze(url);
+      setResult(result);
     } catch (err: any) {
       setError(err.message || 'Failed to analyze URL');
     } finally {
